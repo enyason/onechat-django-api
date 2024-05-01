@@ -22,22 +22,23 @@ class UserRegistrationView(APIView):
         # Validate input data
         if not email or not password or not full_name or not username:
             return http_error_response(error_messages['invalid_user_details'],
-                                       {'response_code': 'invalid_user_details'},
-                                       status.HTTP_400_BAD_REQUEST)
+                                       code='invalid_user_details',
+                                       data=None,
+                                       http_status=status.HTTP_400_BAD_REQUEST)
 
         try:
             validate_email(email)
         except ValidationError:
             return http_error_response(error_messages['invalid_email'],
-                                       {'code': 'invalid_email'},
-                                       status.HTTP_400_BAD_REQUEST)
+                                       code='invalid_email',
+                                       http_status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if user with given username already exists
+            # Check if user with given username already exists
         try:
             existing_user = User.objects.get(username=username)
             return http_error_response(error_messages['user_name_already_taken'],
-                                       {'code': 'user_name_already_taken'},
-                                       status.HTTP_400_BAD_REQUEST)
+                                       code='user_name_already_taken',
+                                       http_status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             pass
 
@@ -45,12 +46,12 @@ class UserRegistrationView(APIView):
         try:
             existing_user = User.objects.get(email=email)
             return http_error_response(error_messages['email_already_exists'],
-                                       {'code': 'email_already_exists'},
-                                       status.HTTP_400_BAD_REQUEST)
+                                       code='email_already_exists',
+                                       http_status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             pass
 
-        # Split full_name into first_name and last_name
+            # Split full_name into first_name and last_name
         names: list[str] = full_name.split(' ')
         first_name: str = names[0]
         last_name: str = ' '.join(names[1:]) if len(names) > 1 else ''
@@ -65,5 +66,5 @@ class UserRegistrationView(APIView):
         )
 
         return http_success_response(message=success_messages['successful_user_registration'],
-                                     data={'code': 'successful_user_registration'},
+                                     code='successful_user_registration',
                                      http_status=status.HTTP_201_CREATED)

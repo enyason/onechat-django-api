@@ -3,15 +3,23 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-def http_success_response(message: str, data: Any = None, http_status: int = status.HTTP_200_OK) -> Response:
+def http_success_response(message: str,
+                          code: str,
+                          data: Any = None,
+                          http_status: int = status.HTTP_200_OK) -> Response:
     return Response({
         'success': True,
         'data': data,
-        'message': message}, status=http_status)
+        'message': message,
+        'code': code
+    }, status=http_status)
 
 
-def http_error_response(message: str, data: Any = None, http_status: int = status.HTTP_400_BAD_REQUEST) -> Response:
+def http_error_response(message: str, code: str, data: Any = None,
+                        http_status: int = status.HTTP_400_BAD_REQUEST) -> Response:
     return Response({
         'success': False,
         'data': data,
-        'message': message}, status=http_status)
+        'message': message,
+        'code': code
+    }, status=http_status)

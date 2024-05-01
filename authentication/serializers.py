@@ -16,14 +16,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = {
             'username': user.username,
             'email': user.email,
-            'fullname': user.get_full_name(),
+            'full_name': user.get_full_name(),
         }
 
         response_data = {
             'success': True,
             'data': {'token': token,
-                     'user': user,
-                     'code': 'access_granted'},
+                     'user': user, },
+            'code': 'access_granted',
             'message': success_messages['access_granted']}
 
         return response_data
