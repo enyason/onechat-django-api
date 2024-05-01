@@ -1,9 +1,13 @@
+import asyncio
 from enum import Enum
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.db.models import Q
+from pyfcm import FCMNotification
 
 from chat.models import Message, Room
+from onechat_api.settings import env
 from users.models import User
 
 
@@ -20,7 +24,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         super().__init__(args, kwargs)
         self.room_group_name = None
         self.room_name = None
-        self.room_id = None
 
     async def emit_error_event(self, message):
         await self.send_json(
@@ -65,8 +68,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         try:
 
-            author = User.objects.aget(id=sender_id)
-            await Message.objects.acreate(
+            author = await User.objects.aget(id=sender_id)
+            message_obj = await Message.objects.acreate(
                 author_id=sender_id,
                 content=message,
                 room_id=self.room_name
@@ -92,9 +95,40 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             room = await Room.objects.aget(id=self.room_name)
             # participants_tokens = room.participants.values_list('fcm_token')
             print(room)
+            api_key = env('FCM_API_KEY')
+            data_message = {
+                "message_id": str(message_obj.id),
+                "message": message,
+                "sender": author.username,
+                "room_id": str(room.id),
+                "room_name": room.name
+            }
             # set up  fcmpy
-            # create a data notification
-            # send FMC notification to clients
+            print("APIKEY")
+            print(api_key)
+            push_service = FCMNotification(api_key=api_key)
+
+            def get_all_fcm_tokens():
+                return User.objects.filter(fcm_token__isnull=False).values_list('fcm_token', flat=True)
+
+            # To multiple devices
+            print(f"fm: {push_service}")
+            fcm_tokens_func = sync_to_async(get_all_fcm_tokens)
+            users_with_token = await fcm_tokens_func()
+
+            registration_ids = []
+            async for token in users_with_token:
+                registration_ids.append(token)
+
+            print(f"fmc_tokens {registration_ids}")
+            print("sending push notifications...")
+            try:
+                result = push_service.notify_multiple_devices(registration_ids=registration_ids,
+                                                              data_message=data_message)
+                print(f"push notifications result {result}")
+            except Exception as e:
+                print(str(e))
+                pass
 
         except  Exception as e:
             print(str(e))
