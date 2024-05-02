@@ -131,7 +131,9 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
     'REFRESH_TOKEN_LIFETIME': timedelta(hours=72),
     "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
     "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
 }
 
 # Internationalization

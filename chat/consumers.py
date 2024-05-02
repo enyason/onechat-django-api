@@ -3,6 +3,7 @@ from enum import Enum
 
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.contrib.auth.models import AnonymousUser
 from pyfcm import FCMNotification
 
 from chat.models import Message, Room
@@ -20,6 +21,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
+        self.user = None
         self.room_group_name = None
         self.room_name = None
 
@@ -33,6 +35,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.close()
 
     async def connect(self):
+        user = self.scope["user"]
+
+        await self.accept()
+
+        print(f"This is a user = {user}")
+        if isinstance(user, AnonymousUser):
+            await self.emit_error_event("Access not granted")
+
+        print(f"user = {user}")
         self.room_name = self.scope["url_route"]["kwargs"]["room_id"]
         self.room_group_name = f"chat_{self.room_name}"
 
@@ -42,8 +53,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-
-        await self.accept()
 
         await self.send_json(
             {
