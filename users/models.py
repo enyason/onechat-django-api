@@ -8,7 +8,7 @@ from users.user_manager import CustomUserManager
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=300, unique=True, verbose_name="Email address")
-    fcm_token = models.CharField(null=True, max_length=128)
+    fcm_token = models.CharField(null=True, max_length=255)
 
     USERNAME_FIELD = "email"
 

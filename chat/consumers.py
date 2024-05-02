@@ -62,13 +62,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content, **kwargs):
         event_type = content.get('event_type')
         message = content['data']['message']
-        sender_id = content['data']['sender_id']
+        sender = content['data']['sender']
 
         try:
 
-            author = await User.objects.aget(id=sender_id)
+            author = await User.objects.aget(username=sender)
             message_obj = await Message.objects.acreate(
-                author_id=sender_id,
+                author=author,
                 content=message,
                 room_id=self.room_name
             )
@@ -76,13 +76,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 'event_type': EventType.MESSAGE.value,
                 'message': 'New message received',
                 'data': {
+                    'message_id': str(message_obj.id),
                     'message': message,
                     'sender': author.username
                 }
             }
 
             print(f"new message = {message}")
-            print(f"sender = {sender_id}")
+            print(f"sender = {sender}")
 
             # Send message to room group
             await self.channel_layer.group_send(
