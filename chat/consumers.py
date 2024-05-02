@@ -1,13 +1,11 @@
-import asyncio
+import os
 from enum import Enum
 
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from django.db.models import Q
 from pyfcm import FCMNotification
 
 from chat.models import Message, Room
-from onechat_api.settings import env
 from users.models import User
 
 
@@ -95,7 +93,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             room = await Room.objects.aget(id=self.room_name)
             # participants_tokens = room.participants.values_list('fcm_token')
             print(room)
-            api_key = env('FCM_API_KEY')
+            api_key = os.environ.get('FCM_API_KEY')
             data_message = {
                 "message_id": str(message_obj.id),
                 "message": message,
